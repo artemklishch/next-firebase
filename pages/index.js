@@ -1,5 +1,6 @@
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import Head from "next/head";
+import styles from "../styles/Home.module.css";
+import { loadFirebase } from "../lib/db";
 
 export default function Home() {
   return (
@@ -15,7 +16,7 @@ export default function Home() {
         </h1>
 
         <p className={styles.description}>
-          Get started by editing{' '}
+          Get started by editing{" "}
           <code className={styles.code}>pages/index.js</code>
         </p>
 
@@ -56,10 +57,42 @@ export default function Home() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Powered by{' '}
+          Powered by{" "}
           <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
         </a>
       </footer>
     </div>
-  )
+  );
 }
+
+Home.getInitialProps = async (ctx) => {
+  // const res = await fetch("https://api.github.com/repos/vercel/next.js");
+  // const json = await res.json();
+  // return { stars: json.stargazers_count };
+  const firebase = await loadFirebase();
+  const result = new Promise((resolve, reject) => {
+    firebase
+      .firestore()
+      .collection("agencies")
+      .limit(10)
+      .get()
+      .then((snapshot) => {
+        const data = [];
+        snapshot.forEach((doc) => {
+          data.push(
+            Object.assign(
+              {
+                id: doc.id,
+              },
+              doc.data()
+            )
+          );
+        });
+        console.log(data);
+        resolve(data);
+      })
+      .catch(() => reject([]));
+  });
+  console.log(result);
+  return {};
+};
